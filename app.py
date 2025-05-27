@@ -6,10 +6,27 @@ import os
 
 # --- Configuração da Aplicação Flask ---
 app = Flask(__name__)
-# Para produção, você restringiria as origens:
-# cors_origins = ["https://SEU_DOMINIO_FRONTEND.com"] # Substitua pelo seu domínio frontend quando tiver
-# CORS(app, origins=cors_origins, supports_credentials=True)
-CORS(app) # Para desenvolvimento e testes iniciais, manter aberto é mais fácil
+
+# --- INÍCIO DA MODIFICAÇÃO CORS ---
+# Substitua 'SEU_USUARIO_GITHUB' pelo seu nome de usuário real do GitHub.
+# Se o seu repositório do GitHub Pages for algo como SEU_USUARIO_GITHUB.github.io/NOME_DO_REPOSITORIO,
+# a origem ainda é apenas https://SEU_USUARIO_GITHUB.github.io
+frontend_gh_pages_origin = "https://carlosfaagundes.github.io/PlanejaPlus/" 
+
+# Adicione a URL do seu ambiente de desenvolvimento local se você ainda o utiliza
+# Exemplo para Live Server do VS Code rodando na porta 5500
+local_dev_origin = "http://127.0.0.1:5500" 
+# Se você abre o file:// diretamente (não recomendado para testes de API com CORS):
+# local_dev_origin_file = "null" 
+
+# Configura o CORS para permitir requisições apenas das origens especificadas.
+# Adicione outras origens se seu frontend estiver em mais de um lugar.
+# Para a URL do Render, não é necessário adicioná-la aqui, pois o backend está nela.
+# Esta configuração é para quais *frontends* podem chamar seu backend.
+CORS(app, origins=[frontend_gh_pages_origin, local_dev_origin], supports_credentials=True)
+# Se você tiver problemas e quiser abrir temporariamente para todos para testar (NÃO RECOMENDADO PARA PRODUÇÃO):
+# CORS(app) 
+# --- FIM DA MODIFICAÇÃO CORS ---
 
 # Configuração do Banco de Dados SQLite
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -33,15 +50,12 @@ class User(db.Model):
         return f'<User {self.username}>'
 
 # CRIA AS TABELAS SE NÃO EXISTIREM (IMPORTANTE PARA O PRIMEIRO DEPLOY)
-# Em um ambiente de produção mais robusto, você usaria Flask-Migrate.
-# Esta linha garante que, quando o app iniciar no servidor, as tabelas sejam criadas.
 with app.app_context():
     db.create_all()
 
 # --- Endpoints da API ---
 @app.route('/api/register', methods=['POST'])
 def register():
-    # ... (seu código de registro aqui, sem alterações) ...
     data = request.get_json()
     username = data.get('username')
     email = data.get('email')
@@ -70,7 +84,6 @@ def register():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    # ... (seu código de login aqui, sem alterações) ...
     data = request.get_json()
     login_credential = data.get('loginCredential')
     password = data.get('password')
@@ -83,7 +96,7 @@ def login():
     if user and bcrypt.check_password_hash(user.password_hash, password):
         return jsonify({
             "message": "Login bem-sucedido!",
-            "username": user.username
+            "username": user.username # Retorna o nome de usuário para o frontend
         }), 200
     else:
         return jsonify({"message": "Credenciais inválidas!"}), 401
@@ -91,5 +104,4 @@ def login():
 # --- Execução da Aplicação ---
 if __name__ == '__main__':
     # Esta parte é para desenvolvimento local. Em produção, o Gunicorn chamará o objeto 'app'.
-    # A linha db.create_all() foi movida para cima para garantir que seja executada quando o módulo for carregado.
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
