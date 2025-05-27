@@ -7,26 +7,15 @@ import os
 # --- Configuração da Aplicação Flask ---
 app = Flask(__name__)
 
-# --- INÍCIO DA MODIFICAÇÃO CORS ---
-# Substitua 'SEU_USUARIO_GITHUB' pelo seu nome de usuário real do GitHub.
-# Se o seu repositório do GitHub Pages for algo como SEU_USUARIO_GITHUB.github.io/NOME_DO_REPOSITORIO,
-# a origem ainda é apenas https://SEU_USUARIO_GITHUB.github.io
-frontend_gh_pages_origin = "https://carlosfaagundes.github.io/PlanejaPlus/" 
+# --- INÍCIO DA CORREÇÃO CORS ---
+# A origem para o GitHub Pages é apenas o domínio, sem o caminho do repositório.
+frontend_gh_pages_origin = "https://carlosfaagundes.github.io"  # CORRIGIDO
 
-# Adicione a URL do seu ambiente de desenvolvimento local se você ainda o utiliza
-# Exemplo para Live Server do VS Code rodando na porta 5500
-local_dev_origin = "http://127.0.0.1:5500" 
-# Se você abre o file:// diretamente (não recomendado para testes de API com CORS):
-# local_dev_origin_file = "null" 
+# URL do seu ambiente de desenvolvimento local (ex: Live Server)
+local_dev_origin = "http://127.0.0.1:5500" # Ajuste a porta se necessário
 
-# Configura o CORS para permitir requisições apenas das origens especificadas.
-# Adicione outras origens se seu frontend estiver em mais de um lugar.
-# Para a URL do Render, não é necessário adicioná-la aqui, pois o backend está nela.
-# Esta configuração é para quais *frontends* podem chamar seu backend.
 CORS(app, origins=[frontend_gh_pages_origin, local_dev_origin], supports_credentials=True)
-# Se você tiver problemas e quiser abrir temporariamente para todos para testar (NÃO RECOMENDADO PARA PRODUÇÃO):
-# CORS(app) 
-# --- FIM DA MODIFICAÇÃO CORS ---
+# --- FIM DA CORREÇÃO CORS ---
 
 # Configuração do Banco de Dados SQLite
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -103,5 +92,4 @@ def login():
 
 # --- Execução da Aplicação ---
 if __name__ == '__main__':
-    # Esta parte é para desenvolvimento local. Em produção, o Gunicorn chamará o objeto 'app'.
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
